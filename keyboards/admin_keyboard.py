@@ -67,3 +67,10 @@ def admin_change_button(idx):
                                      callback_data=f'idx_{idx}'),
                 width=1)
     return builder.as_markup()
+
+def super_admin_menu():
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text='Посмотреть ID администраторов',callback_data='show_admins'),
+                InlineKeyboardButton(text='Добавить администратора',callback_data='add_admin'),
+                InlineKeyboardButton(text='Удалить администртора',callback_data='remove_admin'),width=1)
+    return builder.as_markup()

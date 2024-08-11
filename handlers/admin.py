@@ -7,9 +7,12 @@ from aiogram.fsm.context import FSMContext
 from create_bot import bot
 import keyboards.admin_keyboard as kb
 from utils.texts import Texts
-from filters.admin_filter import Admin
+from filters.admin_filter import Admin, Admin_list
+from filters.super_admin_filter import SuperAdmin
 from states.upload import AdminUpload
 from states.change import AdminChange
+from states.admin_add import AdminAdd
+from states.admin_remove import AdminRemove
 from database.orm_requsts import orm
 
 ad_route = Router()
@@ -117,3 +120,63 @@ async def get_file(call: types.CallbackQuery):
     document = types.FSInputFile(f"Актуальный список на {datetime.date.today()}.xlsx")
     await bot.send_document(call.from_user.id, document=document)
     os.remove(f"Актуальный список на {datetime.date.today()}.xlsx")
+
+
+@ad_route.message(Command('superadmin'), SuperAdmin())
+async def superadmin_handler(msg: types.Message):
+    await bot.send_message(msg.from_user.id,
+                           text=Texts.SUPERADMIN,
+                           reply_markup=kb.super_admin_menu())
+
+
+@ad_route.callback_query(F.data == 'show_admins', SuperAdmin())
+async def show_admin_namdler(call: types.CallbackQuery):
+    await call.message.edit_text(text=Texts.show_list(Admin_list),
+                                 reply_markup=kb.super_admin_menu())
+    await call.answer(cache_time=2)
+
+
+@ad_route.callback_query(F.data == 'add_admin', SuperAdmin())
+async def add_admin_handler(call: types.CallbackQuery, state: FSMContext):
+    await bot.send_message(call.from_user.id,
+                           text=Texts.SUPERADMIN_ADD_REMOVE,
+                           reply_markup=kb.no_add)
+    await state.set_state(AdminAdd.id_number)
+    await call.answer(cache_time=2)
+
+
+@ad_route.message(AdminAdd.id_number, SuperAdmin())
+async def add_admin_finish(msg: types.Message, state: FSMContext):
+    if msg.text.isdigit():
+        Admin_list.append(int(msg.text))
+        await bot.send_message(msg.from_user.id,
+                               text=Texts.SUPERADMIN_SUCCES,
+                               reply_markup=kb.super_admin_menu())
+        await state.clear()
+    else:
+        await bot.send_message(msg.from_user.id,
+                               text=Texts.SUPERADMIN_ERR)
+        await state.set_state(AdminAdd.id_number)
+
+
+@ad_route.callback_query(F.data == 'remove_admin', SuperAdmin())
+async def remove_admin_handler(call: types.CallbackQuery, state: FSMContext):
+    await bot.send_message(call.from_user.id,
+                           text=Texts.SUPERADMIN_ADD_REMOVE,
+                           reply_markup=kb.no_add)
+    await state.set_state(AdminRemove.id_number)
+    await call.answer(cache_time=2)
+
+
+@ad_route.message(AdminRemove.id_number, SuperAdmin())
+async def remove_admin_finish(msg: types.Message, state: FSMContext):
+    if msg.text.isdigit():
+        Admin_list.remove(int(msg.text))
+        await bot.send_message(msg.from_user.id,
+                               text=Texts.SUPERADMIN_SUCCES,
+                               reply_markup=kb.super_admin_menu())
+        await state.clear()
+    else:
+        await bot.send_message(msg.from_user.id,
+                               text=Texts.SUPERADMIN_ERR)
+        await state.set_state(AdminRemove.id_number)

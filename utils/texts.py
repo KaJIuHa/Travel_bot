@@ -162,4 +162,20 @@ class Texts(StrEnum):
 
     ADMIN_SUCCESFUL = 'Данные успешно обновлены'
 
+    SUPERADMIN = 'Верховная хозяйка,что делаем????'
+
+    @staticmethod
+    def show_list(list):
+        admin = [str(i) for i in list]
+        admins = '\n'.join(admin)
+        context = (f'Список админов :\n'
+                   f'{admins}')
+        return context
+    SUPERADMIN_ADD_REMOVE = "Укажите ID пользователя>>>>"
+
+    SUPERADMIN_SUCCES = 'Операция прошла успешно!!!!'
+
+    SUPERADMIN_ERR = 'Указан неверный формат, повторите ввод'
+
+
     CHOISE_KOSMO = '🚀🚀🚀🚀На какой космодром едим ?🚀🚀🚀🚀'
