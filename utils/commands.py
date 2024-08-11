@@ -6,6 +6,8 @@ async def set_default_commands(bot: Bot):
     commands = ([
         BotCommand(command="start",
                    description="Запустить бота"),
+        BotCommand(command= "my_id",
+                   description="Узнать свой ID"),
         BotCommand(command="about_us",
                    description='О нас')
     ])

@@ -35,7 +35,10 @@ async def about_us_handler(msg:types.Message):
                          photo=content,
                          caption=Texts.ABOUT_US,
                          protect_content=True)
-
+@cl_route.message(Command('my_id'))
+async def my_id_handler(msg:types.Message):
+    await bot.send_message(msg.from_user.id,
+                           text=Texts.my_id(int(msg.from_user.id)))
 
 @cl_route.callback_query(F.data == 'main')
 async def main(call: types.CallbackQuery):

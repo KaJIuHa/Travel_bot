@@ -177,5 +177,11 @@ class Texts(StrEnum):
 
     SUPERADMIN_ERR = 'Указан неверный формат, повторите ввод'
 
+    @staticmethod
+    def my_id(idx):
+        text = (f'Ваш <b>ID</b>:\n'
+                f'{int(idx)}')
+        return text
+
 
     CHOISE_KOSMO = '🚀🚀🚀🚀На какой космодром едим ?🚀🚀🚀🚀'
