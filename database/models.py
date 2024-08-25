@@ -20,3 +20,9 @@ class Info(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     category:Mapped[str] = mapped_column(VARCHAR(50), nullable=False)
     photo_id: Mapped[str] = mapped_column(VARCHAR(255))
+
+class Category(Base):
+    __tablename__ = 'category'
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    category: Mapped[str] = mapped_column(String(150), nullable=False)
+

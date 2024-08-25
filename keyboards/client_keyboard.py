@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from database.orm_requsts import orm
 
 reg = [[InlineKeyboardButton(text='📝 Регистрация', callback_data='registration')]]
 reg_kb = InlineKeyboardMarkup(inline_keyboard=reg)
@@ -31,32 +32,15 @@ main = InlineKeyboardMarkup(inline_keyboard=[
 )
 
 
-def choise_kb():
+async def choise_kb():
+    category_list = await orm.get_categories()
+    print(category_list)
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text='🇷🇺 Владивосток', callback_data='сh_vlad'),
-                InlineKeyboardButton(text='🇷🇺 Санкт-Петербург', callback_data='ch_spb'),
-                InlineKeyboardButton(text='🇷🇺 Москва', callback_data='ch_msk'),
-                InlineKeyboardButton(text='🇨🇳 Китай', callback_data='ch_china'),
-                InlineKeyboardButton(text='🚀 Космодром', callback_data='kosmodrom'),
-                InlineKeyboardButton(text='🇷🇺 Сахалин', callback_data='ch_saha'),
-                InlineKeyboardButton(text='🇷🇺 Казань', callback_data='ch_kazan'),
-                InlineKeyboardButton(text='🇷🇺 Дагестан', callback_data='ch_dag'),
-                InlineKeyboardButton(text='🇧🇾 Белоруссия', callback_data='ch_bel'),
-                width=1).add(InlineKeyboardButton(text='↩ Вернутся на главную', callback_data='main'))
+    for i in category_list:
+        builder.row(InlineKeyboardButton(text = f'{i[0]}',callback_data=f'ch_{i[1]}'),width=1)
+    builder.row(InlineKeyboardButton(text='↩ Вернутся на главную', callback_data='main'))
     return builder.as_markup()
 
-
-def choise_kosmo():
-    builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text='🚀 Вочточный', callback_data='ch_vostochniy'),
-                InlineKeyboardButton(text='🛸 Байконур', callback_data='ch_boukonyr'),
-                width=2).row(InlineKeyboardButton(text='↩ Вернуться в предидущее меню',
-                                                  callback_data='choise_tur'),
-                             width=1
-                             ).row(InlineKeyboardButton(text='↩ Вернутся на главную',
-                                                        callback_data='main'),
-                                   width=1)
-    return builder.as_markup()
 
 
 def catalog_kb():

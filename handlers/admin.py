@@ -13,6 +13,9 @@ from states.upload import AdminUpload
 from states.change import AdminChange
 from states.admin_add import AdminAdd
 from states.admin_remove import AdminRemove
+from states.admin_button_action import (AdminButtonActionUpload,
+                                        AdminButtonActionDelete,
+                                        AdminButtonActionChange)
 from database.orm_requsts import orm
 
 ad_route = Router()
@@ -108,7 +111,7 @@ async def no_add_call(call: types.CallbackQuery, state: FSMContext):
 @ad_route.callback_query(F.data == 'add_choise_tur')
 async def add_choise_tur_handler(call: types.CallbackQuery):
     await call.message.edit_text(text=Texts.ADMIN_CATALOG,
-                                 reply_markup=kb.admin_choise_kb())
+                                 reply_markup=await kb.admin_choise_kb())
     await call.answer(cache_time=2)
 
 
@@ -180,3 +183,80 @@ async def remove_admin_finish(msg: types.Message, state: FSMContext):
         await bot.send_message(msg.from_user.id,
                                text=Texts.SUPERADMIN_ERR)
         await state.set_state(AdminRemove.id_number)
+
+
+@ad_route.callback_query(F.data == 'add_button', Admin())
+async def add_button_handler(call: types.CallbackQuery):
+    await call.message.edit_text(text=Texts.BUTTON_ADMIN,
+                                 reply_markup=kb.admin_button_choise())
+    await call.answer(cache_time=2)
+
+
+@ad_route.callback_query(F.data.startswith('button_'), Admin())
+async def button_choise_action(call: types.CallbackQuery, state: FSMContext):
+    if call.data == "button_upload":
+        await call.message.edit_text(text=Texts.BUTTON_SET_NAME,
+                                     reply_markup=kb.no_add)
+        await state.set_state(AdminButtonActionUpload.button_name)
+        await call.answer(cache_time=2)
+    elif call.data == 'button_change':
+        button_list = await orm.get_categories()
+        for i in button_list:
+            await bot.send_message(call.from_user.id,
+                                   text=Texts.button_choise(i[0]),
+                                   reply_markup=kb.button_choise_kb(i[1]))
+        await state.set_state(AdminButtonActionChange.button_idx)
+        await bot.send_message(call.from_user.id, text=Texts.NO_ADD, reply_markup=kb.no_add)
+        await call.answer(cache_time=2)
+    elif call.data == 'button_delete':
+        button_list = await orm.get_categories()
+        for i in button_list:
+            await bot.send_message(call.from_user.id,
+                                   text=Texts.button_choise(i[0]),
+                                   reply_markup=kb.button_delete_kb(i[1]))
+        await bot.send_message(call.from_user.id, text=Texts.NO_ADD, reply_markup=kb.no_add)
+        await state.set_state(AdminButtonActionDelete.button_idx)
+        await call.answer(cache_time=2)
+
+
+@ad_route.message(AdminButtonActionUpload.button_name, Admin())
+async def admin_upload_button_finish(msg: types.Message, state: FSMContext):
+    await orm.admin_add_button(data=msg.text)
+    await bot.send_message(msg.from_user.id,
+                           text=Texts.SUCC_ADD,
+                           reply_markup=kb.back_admin)
+    await state.clear()
+
+
+@ad_route.callback_query(AdminButtonActionChange.button_idx,
+                         F.data.startswith('changebutton_'),
+                         Admin())
+async def button_change_idx(call: types.CallbackQuery, state: FSMContext):
+    await state.update_data(button_idx=call.data[13::])
+    await bot.send_message(chat_id=call.from_user.id, text=Texts.BUTTON_SET_NAME,
+                           reply_markup=kb.no_add)
+    await state.set_state(AdminButtonActionChange.button_name)
+    await call.answer(cache_time=2)
+
+
+@ad_route.message(AdminButtonActionChange.button_name, Admin())
+async def admin_upload_button_finish(msg: types.Message, state: FSMContext):
+    await state.update_data(button_name=msg.text)
+    data = await state.get_data()
+    await orm.admin_change_button(data=data)
+    await bot.send_message(msg.from_user.id,
+                           text=Texts.SUCC_ADD,
+                           reply_markup=kb.back_admin)
+    await state.clear()
+
+
+@ad_route.callback_query(AdminButtonActionDelete.button_idx,
+                         F.data.startswith('deletebutton_'),
+                         Admin())
+async def delete_button_finish(call: types.CallbackQuery, state: FSMContext):
+    await orm.admin_delete_button(call.data[13::])
+    await bot.send_message(call.from_user.id,
+                           text=Texts.SUCC_ADD,
+                           reply_markup=kb.back_admin)
+    await state.clear()
+    await call.answer(cache_time=2)

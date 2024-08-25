@@ -168,7 +168,7 @@ async def send_catalog(call: types.CallbackQuery):
 @cl_route.callback_query(F.data == 'choise_tur')
 async def choise_tur(call: types.CallbackQuery):
     await call.message.edit_text(text=Texts.CHOISE_TUR,
-                                 reply_markup=kb.choise_kb())
+                                 reply_markup=await kb.choise_kb())
 
 
 @cl_route.callback_query(F.data.startswith('ch_'))
