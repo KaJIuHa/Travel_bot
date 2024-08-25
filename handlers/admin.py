@@ -16,6 +16,7 @@ from states.admin_remove import AdminRemove
 from states.admin_button_action import (AdminButtonActionUpload,
                                         AdminButtonActionDelete,
                                         AdminButtonActionChange)
+from states.admin_visa_action import AdminUploadVisa
 from database.orm_requsts import orm
 
 ad_route = Router()
@@ -260,3 +261,38 @@ async def delete_button_finish(call: types.CallbackQuery, state: FSMContext):
                            reply_markup=kb.back_admin)
     await state.clear()
     await call.answer(cache_time=2)
+
+
+@ad_route.callback_query(F.data == 'add_visa', Admin())
+async def add_visa_start(call: types.CallbackQuery):
+    await call.message.edit_text(text=Texts.ADMIN_CATALOG_CHOISE,
+                                 reply_markup=kb.admin_visa_choise())
+
+
+@ad_route.callback_query(F.data == 'visa_upload', Admin())
+async def upload_visa(call: types.CallbackQuery, state: FSMContext):
+    await call.message.edit_text(text=Texts.UPLOAD_VISA_START,
+                                 reply_markup=kb.upload_visa_catalog())
+    await state.set_state(AdminUploadVisa.visa_category)
+    await call.answer(cache_time=2)
+
+
+@ad_route.callback_query(AdminUploadVisa.visa_category,
+                         F.data.startswith('uvisa_'),
+                         Admin())
+async def upload_visa_add_category(call: types.CallbackQuery, state: FSMContext):
+    print(call.data[6::])
+    await state.update_data(category=call.data[6::])
+    await call.message.edit_text(text=Texts.ADMIN_ADD)
+    await state.set_state(AdminUploadVisa.visa_photo_id)
+    await call.answer(cache_time=2)
+
+
+@ad_route.message(AdminUploadVisa.visa_photo_id, F.photo)
+async def upload_visa_finish(msg: types.Message, state: FSMContext):
+    await state.update_data(photo=msg.photo[-1].file_id)
+    data = await state.get_data()
+    await orm.upload_file(data)
+    await bot.send_message(msg.from_user.id,
+                           text=Texts.ADMIN_SUCCESFUL, reply_markup=kb.admin_kb())
+    await state.clear()

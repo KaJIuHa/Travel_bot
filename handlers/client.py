@@ -3,15 +3,17 @@ import datetime
 
 from aiogram import types, F, Router
 from aiogram.enums import ChatAction
-from aiogram.filters import CommandStart,Command
+from aiogram.exceptions import TelegramNetworkError
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 import phonenumbers
+from aiogram.types import PreCheckoutQuery, LabeledPrice
 from email_validator import validate_email
 
 import keyboards.client_keyboard as kb
 from utils.texts import Texts
 
-from create_bot import bot
+from create_bot import bot,PAYMENT,CHAT
 from database.orm_requsts import orm
 from states.register import UserRegister
 
@@ -28,17 +30,21 @@ async def cmd_start(msg: types.Message):
         await msg.answer(text=Texts.start(msg.from_user.username),
                          reply_markup=kb.reg_kb)
 
+
 @cl_route.message(Command('about_us'))
-async def about_us_handler(msg:types.Message):
+async def about_us_handler(msg: types.Message):
     content = types.FSInputFile('data/about_us.jpg')
     await bot.send_photo(chat_id=msg.from_user.id,
                          photo=content,
                          caption=Texts.ABOUT_US,
                          protect_content=True)
+
+
 @cl_route.message(Command('my_id'))
-async def my_id_handler(msg:types.Message):
+async def my_id_handler(msg: types.Message):
     await bot.send_message(msg.from_user.id,
                            text=Texts.my_id(int(msg.from_user.id)))
+
 
 @cl_route.callback_query(F.data == 'main')
 async def main(call: types.CallbackQuery):
@@ -184,20 +190,70 @@ async def send_catalog(call: types.CallbackQuery):
     await bot.send_message(call.from_user.id, text=Texts.CAPTION, reply_markup=kb.choise_kb())
 
 
-@cl_route.callback_query(F.data == 'kosmodrom')
-async def kosmodrom_handler(call: types.CallbackQuery):
-    await call.message.edit_text(text=Texts.CHOISE_KOSMO,
-                                 reply_markup=kb.choise_kosmo())
-    await call.answer(cache_time=2)
-
-
 @cl_route.callback_query(F.data == 'visa')
 async def visa_hendler(call: types.CallbackQuery):
-    photos = await orm.get_files(category=call.data)
+    await call.message.edit_text(text=Texts.VISA_CHOISE, reply_markup=kb.visa_catalog())
+    await call.answer(cache_time=2)
+
+@cl_route.callback_query(F.data.startswith('visa_'))
+async def show_visa_presentation(call:types.CallbackQuery):
+    print(call.data[5::])
+    photos = await orm.get_files(category=call.data[5::])
     action = ChatAction.UPLOAD_PHOTO
+
     group = []
     for photo in photos:
         group.append(types.InputMediaPhoto(media=photo, caption=Texts.CAPTION))
     await bot.send_chat_action(call.from_user.id, action=action)
     await asyncio.sleep(3)
     await call.message.answer_media_group(media=group, protect_content=True)
+    await bot.send_message(call.from_user.id,
+                           text=Texts.CAPTION,
+                           reply_markup=await kb.visa_catalog_price(call.data[5::]))
+    await call.answer(cache_time=2)
+
+@cl_route.callback_query(F.data.startswith('pay_'))
+async def send_invoice_handler(call: types.CallbackQuery):
+    await call.answer()
+    try:
+        query = call.data.split('_')
+        print(query)
+        name = await orm.get_visa_description(query[2])
+        price = int(query[1])
+        print(price)
+        prices = [LabeledPrice(label=name[0], amount=(price * 100))]
+        await bot.send_invoice(
+            chat_id=call.from_user.id,
+            title=f'Оплата визы',
+            description=name[0],
+            prices=prices,
+            provider_token=PAYMENT,
+            payload=name[0],
+            currency="rub"
+        )
+    except KeyError:
+        await call.message.answer('Ваш запрос уже обрабатывается или уже обработался⏳')
+    except TelegramNetworkError:
+        pass
+
+
+@cl_route.pre_checkout_query()
+async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
+    await pre_checkout_query.answer(ok=True)
+
+@cl_route.message(F.successful_payment)
+async def success_payment_handler(msg: types.Message):
+    try:
+        user = msg.from_user.id
+        username = msg.from_user.username
+
+        name = msg.successful_payment.invoice_payload
+        price = msg.successful_payment.total_amount // 100
+        await bot.send_message(chat_id=CHAT,text= f'Пользователь: @{username}\n'
+                                                  f'Оплатил визу: {name}\n'
+                                                  f'Стоимость: {price}')
+        await bot.send_message(chat_id=user,text='Оплата прошла успешно, вскоре с вами свяжется наш менеджер,'
+                                                 'либо свяжитесь с нами по контактным телефонам они есть в '
+                                                 'разделе "О нас"')
+    except TelegramNetworkError:
+        pass

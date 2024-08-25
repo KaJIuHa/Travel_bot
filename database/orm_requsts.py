@@ -1,5 +1,5 @@
 from database.data import db
-from database.models import User, Info, Category
+from database.models import User, Info, Category,Visa
 from sqlalchemy import select, update,delete
 
 
@@ -46,6 +46,17 @@ class OrmRequsts:
             query = await session.execute(select(Category.category, Category.id))
             return query.all()
 
+    async def get_visa_price(self,category):
+        async with db.session() as session:
+            query = await session.execute(select(Visa.description,
+                                                 Visa.price,
+                                                 Visa.id).where(Visa.visa_country == category))
+            return query.all()
+
+    async def get_visa_description(self, idx):
+        async with db.session() as session:
+            query = await session.execute(select(Visa.description).where(Visa.id == idx))
+            return query.one()
     async def change_file_admin(self, data):
         async with db.session() as session:
             await session.execute(update(Info).values({'photo_id': f'{data["file"]}'}).where(Info.id == data['id']))

@@ -11,6 +11,7 @@ load_dotenv(find_dotenv())
 TOKEN = os.getenv('TOKEN')
 CHAT = os.getenv('ADMIN_CHAT')
 DB_CONN = os.getenv('DB_CONNECT')
+PAYMENT = os.getenv('PAYMENT_TOKEN')
 storage = MemoryStorage()
 
 

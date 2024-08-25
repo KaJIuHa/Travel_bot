@@ -19,7 +19,7 @@ back_admin = InlineKeyboardMarkup(
 def admin_kb():
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="Добавить/изменить в каталог", callback_data='add_catalog'),
-                InlineKeyboardButton(text="Добавить/изменить в визы", callback_data='acatalog_visa'),
+                InlineKeyboardButton(text="Добавить/изменить в визы", callback_data='add_visa'),
                 InlineKeyboardButton(text="Добавить/изменить в Выбор тура", callback_data='add_choise_tur'),
                 InlineKeyboardButton(text="Добавить/изменить кнопку для туров", callback_data='add_button'),
                 InlineKeyboardButton(text="Получить файл с контактами пользователей", callback_data='get_file'),
@@ -35,21 +35,6 @@ def admin_catalog_kb():
                 width=2).row(InlineKeyboardButton(text='↩ Вернутся в админ меню', callback_data='admin'), width=1)
     return builder.as_markup()
 
-
-# def admin_choise_kb():
-#     builder = InlineKeyboardBuilder()
-#     builder.row(InlineKeyboardButton(text='🇷🇺 Владивосток', callback_data='acatalog_сh_vlad'),
-#                 InlineKeyboardButton(text='🇷🇺 Санкт-Петербург', callback_data='acatalog_ch_spb'),
-#                 InlineKeyboardButton(text='🇷🇺 Москва', callback_data='acatalog_ch_msk'),
-#                 InlineKeyboardButton(text='🇨🇳 Китай', callback_data='acatalog_ch_china'),
-#                 InlineKeyboardButton(text='🚀 Вочточный', callback_data='ch_vostochniy'),
-#                 InlineKeyboardButton(text='🛸 Байконур', callback_data='ch_boukonyr'),
-#                 InlineKeyboardButton(text='🇷🇺 Сахалин', callback_data='acatalog_ch_saha'),
-#                 InlineKeyboardButton(text='🇷🇺 Казань', callback_data='acatalog_ch_kazan'),
-#                 InlineKeyboardButton(text='🇷🇺 Дагестан', callback_data='acatalog_ch_dag'),
-#                 InlineKeyboardButton(text='🇧🇾 Белоруссия', callback_data='acatalog_ch_bel'),
-#                 width=1).add(InlineKeyboardButton(text='↩ Вернутся в админ меню', callback_data='admin'))
-#     return builder.as_markup()
 async def admin_choise_kb():
     category_list = await orm.get_categories()
     print(category_list)
@@ -117,4 +102,31 @@ def button_delete_kb(button_idx):
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text = "⬆🚫Удалить⬆",
                                      callback_data=f'deletebutton_{button_idx}'))
+    return builder.as_markup()
+
+
+def admin_visa_choise():
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="📥 Добавить", callback_data=f'visa_upload'),
+                InlineKeyboardButton(text='🔁Изменить', callback_data=f'visa_change'),
+                width=2).row(InlineKeyboardButton(text='↩ Вернутся в админ меню', callback_data='admin'), width=1)
+
+    return builder.as_markup()
+
+
+
+
+
+def upload_visa_catalog():
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text='🇮🇳 Индия', callback_data='uvisa_india'),
+                InlineKeyboardButton(text='🇨🇳 Китай', callback_data='uvisa_china'),
+                InlineKeyboardButton(text='🇯🇵 Япония', callback_data='uvisa_japan'),
+                InlineKeyboardButton(text='🇹🇭 Тайланд', callback_data='uvisa_tailand'),
+                InlineKeyboardButton(text='🇰🇷 Южная Корея', callback_data='uvisa_south_korea'),
+                InlineKeyboardButton(text='🇸🇬 Сингапур', callback_data='uvisa_siongopur'),
+                InlineKeyboardButton(text='🇹🇼 Тайвань', callback_data='uvisa_taivan'),
+                width=2).row(InlineKeyboardButton(text="⛔ Галя у нас ОТМЕНА",
+                                                  callback_data='no_add_admin'),
+                             width=1)
     return builder.as_markup()
