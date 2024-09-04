@@ -1,6 +1,6 @@
 from database.data import db
-from database.models import User, Info, Category,Visa
-from sqlalchemy import select, update,delete
+from database.models import User, Info, Category, Visa
+from sqlalchemy import select, update, delete
 
 
 class OrmRequsts:
@@ -46,7 +46,7 @@ class OrmRequsts:
             query = await session.execute(select(Category.category, Category.id))
             return query.all()
 
-    async def get_visa_price(self,category):
+    async def get_visa_price(self, category):
         async with db.session() as session:
             query = await session.execute(select(Visa.description,
                                                  Visa.price,
@@ -57,6 +57,7 @@ class OrmRequsts:
         async with db.session() as session:
             query = await session.execute(select(Visa.description).where(Visa.id == idx))
             return query.one()
+
     async def change_file_admin(self, data):
         async with db.session() as session:
             await session.execute(update(Info).values({'photo_id': f'{data["file"]}'}).where(Info.id == data['id']))
@@ -84,11 +85,11 @@ class OrmRequsts:
                 {'category': f'{data["button_name"]}'}).where(
                 Category.id == data['button_idx']))
             await session.commit()
+
     async def admin_delete_button(self, idx):
         async with db.session() as session:
             await session.execute(delete(Category).where(Category.id == f"{idx}"))
             await session.commit()
-
 
 
 orm = OrmRequsts()

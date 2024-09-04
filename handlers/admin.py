@@ -269,7 +269,7 @@ async def add_visa_start(call: types.CallbackQuery):
                                  reply_markup=kb.admin_visa_choise())
 
 
-@ad_route.callback_query(F.data == 'visa_upload', Admin())
+@ad_route.callback_query(F.data == 'avisa_upload', Admin())
 async def upload_visa(call: types.CallbackQuery, state: FSMContext):
     await call.message.edit_text(text=Texts.UPLOAD_VISA_START,
                                  reply_markup=kb.upload_visa_catalog())
@@ -281,7 +281,6 @@ async def upload_visa(call: types.CallbackQuery, state: FSMContext):
                          F.data.startswith('uvisa_'),
                          Admin())
 async def upload_visa_add_category(call: types.CallbackQuery, state: FSMContext):
-    print(call.data[6::])
     await state.update_data(category=call.data[6::])
     await call.message.edit_text(text=Texts.ADMIN_ADD)
     await state.set_state(AdminUploadVisa.visa_photo_id)

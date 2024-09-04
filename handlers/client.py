@@ -187,7 +187,7 @@ async def send_catalog(call: types.CallbackQuery):
     await bot.send_chat_action(call.from_user.id, action=action)
     await asyncio.sleep(3)
     await call.message.answer_media_group(media=group, protect_content=True)
-    await bot.send_message(call.from_user.id, text=Texts.CAPTION, reply_markup=kb.choise_kb())
+    await bot.send_message(call.from_user.id, text=Texts.CAPTION, reply_markup= kb.main)
 
 
 @cl_route.callback_query(F.data == 'visa')
@@ -197,7 +197,6 @@ async def visa_hendler(call: types.CallbackQuery):
 
 @cl_route.callback_query(F.data.startswith('visa_'))
 async def show_visa_presentation(call:types.CallbackQuery):
-    print(call.data[5::])
     photos = await orm.get_files(category=call.data[5::])
     action = ChatAction.UPLOAD_PHOTO
 
@@ -217,10 +216,9 @@ async def send_invoice_handler(call: types.CallbackQuery):
     await call.answer()
     try:
         query = call.data.split('_')
-        print(query)
         name = await orm.get_visa_description(query[2])
         price = int(query[1])
-        print(price)
+
         prices = [LabeledPrice(label=name[0], amount=(price * 100))]
         await bot.send_invoice(
             chat_id=call.from_user.id,
